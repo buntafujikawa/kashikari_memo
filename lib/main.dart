@@ -60,6 +60,8 @@ class _MyInputFormState extends State<InputForm> {
     _mainReference =
         FirebaseFirestore.instance.collection('kashikari-memo').doc();
 
+    bool deleteFlg = false;
+
     if (widget.document != null) {
       if (_data.user == '' && _data.stuff == '') {
         _data.borrowOrLend = widget.document!['borrowOrLend'] as String;
@@ -70,6 +72,8 @@ class _MyInputFormState extends State<InputForm> {
       _mainReference = FirebaseFirestore.instance
           .collection('kashikari-memo')
           .doc(widget.document!.id);
+
+      deleteFlg = true;
     }
 
     return Scaffold(
@@ -91,9 +95,13 @@ class _MyInputFormState extends State<InputForm> {
               }),
           IconButton(
               icon: Icon(Icons.delete),
-              onPressed: () {
-                print('削除ボタンを押しました');
-              })
+              onPressed: !deleteFlg
+                  ? null
+                  : () {
+                      print('削除ボタンを押しました');
+                      _mainReference.delete();
+                      Navigator.pop(context);
+                    })
         ]),
         body: SafeArea(
           child: Form(
