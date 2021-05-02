@@ -21,6 +21,9 @@ class MyApp extends StatelessWidget {
 }
 
 class InputForm extends StatefulWidget {
+  const InputForm(this.document);
+  final DocumentSnapshot? document;
+
   @override
   _MyInputFormState createState() => _MyInputFormState();
 }
@@ -53,8 +56,21 @@ class _MyInputFormState extends State<InputForm> {
 
   @override
   Widget build(BuildContext context) {
-    CollectionReference _mainReference;
-    _mainReference = FirebaseFirestore.instance.collection('kashikari-memo');
+    DocumentReference _mainReference;
+    _mainReference =
+        FirebaseFirestore.instance.collection('kashikari-memo').doc();
+
+    if (widget.document != null) {
+      if (_data.user == '' && _data.stuff == '') {
+        _data.borrowOrLend = widget.document!['borrowOrLend'] as String;
+        _data.user = widget.document!['user'] as String;
+        _data.stuff = widget.document!['stuff'] as String;
+      }
+
+      _mainReference = FirebaseFirestore.instance
+          .collection('kashikari-memo')
+          .doc(widget.document!.id);
+    }
 
     return Scaffold(
         appBar: AppBar(title: const Text('かしかり入力'), actions: <Widget>[
@@ -64,7 +80,7 @@ class _MyInputFormState extends State<InputForm> {
                 print('保存ボタンを押しました');
                 if (_formKey.currentState!.validate()) {
                   _formKey.currentState!.save();
-                  _mainReference.add({
+                  _mainReference.set({
                     'borrowOrLend': _data.borrowOrLend,
                     'user': _data.user,
                     'stuff': _data.stuff,
@@ -191,7 +207,7 @@ class _MyList extends State<List> {
               context,
               MaterialPageRoute(
                   settings: const RouteSettings(name: '/new'),
-                  builder: (BuildContext context) => InputForm()));
+                  builder: (BuildContext context) => InputForm(null)));
         },
       ),
     );
@@ -213,6 +229,11 @@ class _MyList extends State<List> {
             child: const Text('編集'),
             onPressed: () {
               print('編集ボタンを押しました');
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      settings: const RouteSettings(name: '/edit'),
+                      builder: (BuildContext context) => InputForm(document)));
             })
       ])
     ]));
