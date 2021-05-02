@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -15,6 +17,141 @@ class MyApp extends StatelessWidget {
       title: 'かしかりメモ',
       home: List(),
     );
+  }
+}
+
+class InputForm extends StatefulWidget {
+  @override
+  _MyInputFormState createState() => _MyInputFormState();
+}
+
+class _FormData {
+  String borrowOrLend = 'borrow';
+  String user = '';
+  String stuff = '';
+  DateTime date = DateTime.now();
+}
+
+class _MyInputFormState extends State<InputForm> {
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final _FormData _data = _FormData();
+
+  Future<DateTime?> _selectTime(BuildContext context) {
+    return showDatePicker(
+      context: context,
+      initialDate: _data.date,
+      firstDate: DateTime(_data.date.year - 2),
+      lastDate: DateTime(_data.date.year + 2),
+    );
+  }
+
+  void _setLendOrRent(String value) {
+    setState(() {
+      _data.borrowOrLend = value;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    CollectionReference _mainReference;
+    _mainReference = FirebaseFirestore.instance.collection('kashikari-memo');
+
+    return Scaffold(
+        appBar: AppBar(title: const Text('かしかり入力'), actions: <Widget>[
+          IconButton(
+              icon: Icon(Icons.save),
+              onPressed: () {
+                print('保存ボタンを押しました');
+                if (_formKey.currentState!.validate()) {
+                  _formKey.currentState!.save();
+                  _mainReference.add({
+                    'borrowOrLend': _data.borrowOrLend,
+                    'user': _data.user,
+                    'stuff': _data.stuff,
+                    'date': _data.date,
+                  });
+                  Navigator.pop(context);
+                }
+              }),
+          IconButton(
+              icon: Icon(Icons.delete),
+              onPressed: () {
+                print('削除ボタンを押しました');
+              })
+        ]),
+        body: SafeArea(
+          child: Form(
+            key: _formKey,
+            child: ListView(
+              padding: const EdgeInsets.all(20.0),
+              children: <Widget>[
+                RadioListTile(
+                    value: 'borrow',
+                    groupValue: _data.borrowOrLend,
+                    title: const Text('借りた'),
+                    onChanged: (String? value) {
+                      print('借りたをタッチしました');
+                      _setLendOrRent(value!);
+                    }),
+                RadioListTile(
+                    value: 'lend',
+                    groupValue: _data.borrowOrLend,
+                    title: const Text('貸した'),
+                    onChanged: (String? value) {
+                      print('貸したをタッチしました');
+                      _setLendOrRent(value!);
+                    }),
+                TextFormField(
+                  decoration: const InputDecoration(
+                      icon: const Icon(Icons.person),
+                      hintText: '相手の名前',
+                      labelText: 'Name'),
+                  onSaved: (String? value) {
+                    _data.user = value!;
+                  },
+                  validator: (value) {
+                    if (value!.isEmpty) {
+                      return '名前は必須入力項目です';
+                    }
+                  },
+                  initialValue: _data.user,
+                ),
+                TextFormField(
+                  decoration: const InputDecoration(
+                      icon: const Icon(Icons.business_center),
+                      hintText: '借りたもの、貸したもの',
+                      labelText: 'loan'),
+                  onSaved: (String? value) {
+                    _data.stuff = value!;
+                  },
+                  validator: (value) {
+                    if (value!.isEmpty) {
+                      return '借りたもの、貸したものは必須入力項目です';
+                    }
+                  },
+                  initialValue: _data.stuff,
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 8.0),
+                  child:
+                      Text("締め切り日: ${_data.date.toString().substring(0, 10)}"),
+                ),
+                ElevatedButton(
+                    child: const Text('締め切り日変更'),
+                    onPressed: () {
+                      print('締め切り日変更をタッチしました');
+                      _selectTime(context).then((time) {
+                        if (time != null && time != _data.date) {
+                          setState(() {
+                            _data.date = time;
+                          });
+                        }
+                      });
+                    })
+              ],
+            ),
+          ),
+        ));
   }
 }
 
@@ -50,6 +187,11 @@ class _MyList extends State<List> {
         child: const Icon(Icons.add),
         onPressed: () {
           print('新規作成ボタンを押しました');
+          Navigator.push(
+              context,
+              MaterialPageRoute(
+                  settings: const RouteSettings(name: '/new'),
+                  builder: (BuildContext context) => InputForm()));
         },
       ),
     );
