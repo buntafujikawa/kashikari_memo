@@ -2,6 +2,10 @@
 
 A new Flutter application.
 
+## Reference
+
+https://github.com/chasibu/kasikari_memo
+
 ## Getting Started
 
 This project is a starting point for a Flutter application.
