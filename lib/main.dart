@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:share/share.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -119,7 +120,7 @@ class _MyInputFormState extends State<InputForm> {
     return Scaffold(
         appBar: AppBar(title: const Text('かしかり入力'), actions: <Widget>[
           IconButton(
-              icon: Icon(Icons.save),
+              icon: const Icon(Icons.save),
               onPressed: () {
                 print('保存ボタンを押しました');
                 if (_formKey.currentState!.validate()) {
@@ -134,14 +135,26 @@ class _MyInputFormState extends State<InputForm> {
                 }
               }),
           IconButton(
-              icon: Icon(Icons.delete),
+              icon: const Icon(Icons.delete),
               onPressed: !deleteFlg
                   ? null
                   : () {
                       print('削除ボタンを押しました');
                       _mainReference.delete();
                       Navigator.pop(context);
-                    })
+                    }),
+          IconButton(
+              icon: const Icon(Icons.share),
+              onPressed: () {
+                if (_formKey.currentState!.validate()) {
+                  _formKey.currentState!.save();
+                  Share.share(
+                      "【${_data.borrowOrLend == 'lend' ? '貸' : '借'} ${_data.stuff}" +
+                          "\n期限: ${_data.date.toString().substring(0, 10)}】" +
+                          "\n相手: ${_data.user}" +
+                          "\n#かしかりメモ");
+                }
+              }),
         ]),
         body: SafeArea(
           child: Form(
@@ -235,7 +248,7 @@ class _MyList extends State<List> {
               onPressed: () {
                 print('login');
                 showBasicDialog(context);
-              })
+              }),
         ],
       ),
       body: Padding(
